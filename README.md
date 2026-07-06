@@ -7,6 +7,10 @@ docker compose up -d postgres
 ```
 ```
 cd economizae
-export SERVER_DATABASE_HOST=localhost
 ./gradlew bootRun
+```
+
+Após inserir qualquer dependencia nova no build.gradle:
+```
+./gradlew build --refresh-dependencies
 ```

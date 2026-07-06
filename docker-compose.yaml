@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-        - .env
+        - ./economizae/.env
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: pass
