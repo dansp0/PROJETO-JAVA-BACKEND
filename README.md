@@ -21,3 +21,20 @@ Após inserir qualquer dependencia nova no build.gradle:
 ```
 ./gradlew build --refresh-dependencies
 ```
+
+Após inserir qualquer teste novo
+```
+./gradlew clean test --tests
+```
+
+Hot Reload:
+
+Terminal 1:
+```
+./gradlew -t classes
+```
+
+Terminal 2:
+```
+./gradlew bootRun
+```
