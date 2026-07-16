@@ -25,3 +25,5 @@ replay_pid*
 
 economizae/.env
 .vscode/
+
+economizae/src/main/java/br/saasmania/economizae/transcription/domain/aux
