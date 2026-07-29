@@ -3,6 +3,7 @@ package br.saasmania.economizae.transcription.infrastructure;
 import br.saasmania.economizae.transcription.domain.IntencaoComando;
 import br.saasmania.economizae.transcription.domain.IInterpretadorDeIntencaoPort;
 import br.saasmania.economizae.transcription.domain.TextoTranscrito;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
