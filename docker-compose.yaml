@@ -2,55 +2,50 @@ services:
   app:
     container_name: app_economizae
     build:
-      context: .
+      context: ./economizae
       dockerfile: Dockerfile
     env_file:
-        - ./economizae/.env
+      - ./economizae/.env
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: postgres
       SERVER_DATABASE_HOST: postgres_economizae
-      APP_NAME: pj-hans-back
+      APP_NAME: pj-santander-back
       APP_PORT: 8000
       DB_URL: postgresql://admin:pass@postgres_economizae:5432/postgres
       PRIMARY_ADMIN_USERNAME: ${PRIMARY_ADMIN_USERNAME:-admin}
       PRIMARY_ADMIN_EMAIL: ${PRIMARY_ADMIN_EMAIL:-admin@admin.com}
       PRIMARY_ADMIN_PASSWORD: ${PRIMARY_ADMIN_PASSWORD:-12345678}
     ports:
-      - "8000:8000"
+      - "9001:8000"
     networks:
       mynetwork:
-        ipv4_address: ${HANS_DOCKER_SUBNET:-192.168.53}.5
+        ipv4_address: ${DOCKER_SUBNET:-192.168.53}.5
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   migrate:
     container_name: migrate_economizae
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: postgres
-      SERVER_DATABASE_HOST: postgres_economizae
-      DB_URL: postgresql://admin:pass@postgres_economizae:5432/postgres
-      PRIMARY_ADMIN_USERNAME: ${PRIMARY_ADMIN_USERNAME:-admin}
-      PRIMARY_ADMIN_EMAIL: ${PRIMARY_ADMIN_EMAIL:-admin@admin.com}
-      PRIMARY_ADMIN_PASSWORD: ${PRIMARY_ADMIN_PASSWORD:-12345678}
+    image: flyway/flyway:11-alpine
     command: >
-      sh -c "
-      aerich upgrade || exit 1 &&
-      python scripts/seed_primary_admin.py
-      "
+      -url=jdbc:postgresql://postgres_economizae:5432/postgres
+      -user=admin
+      -password=pass
+      -locations=filesystem:/flyway/sql
+      -connectRetries=10
+      migrate
+    volumes:
+      - ./economizae/src/main/resources/db/migration:/flyway/sql
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       mynetwork:
-        ipv4_address: ${HANS_DOCKER_SUBNET:-192.168.53}.4
+        ipv4_address: ${DOCKER_SUBNET:-192.168.53}.4
 
   postgres:
     container_name: postgres_economizae
@@ -71,14 +66,14 @@ services:
       - postgres-db:/data/postgres
     networks:
       mynetwork:
-        ipv4_address: ${HANS_DOCKER_SUBNET:-192.168.53}.3
+        ipv4_address: ${DOCKER_SUBNET:-192.168.53}.3
 
 networks:
   mynetwork:
     driver: bridge
     ipam:
       config:
-        - subnet: ${HANS_DOCKER_SUBNET:-192.168.53}.0/24
+        - subnet: ${DOCKER_SUBNET:-192.168.53}.0/24
 
 volumes:
   postgres-db:
