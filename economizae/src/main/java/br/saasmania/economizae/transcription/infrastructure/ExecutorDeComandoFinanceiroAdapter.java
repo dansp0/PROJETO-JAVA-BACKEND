@@ -11,11 +11,13 @@ import br.saasmania.economizae.transaction.application.ConsultarTransacoesPorPer
 import br.saasmania.economizae.transaction.application.CriarTransacaoUseCase;
 import br.saasmania.economizae.transaction.domain.CategoriaTransacao;
 import br.saasmania.economizae.transaction.domain.TipoMovimento;
-import br.saasmania.economizae.transaction.domain.Transacao;
 import br.saasmania.economizae.transcription.domain.IExecutorDeComandoFinanceiroPort;
 import br.saasmania.economizae.transcription.domain.IntencaoComando;
 import br.saasmania.economizae.transcription.domain.RespostaFinal;
-import br.saasmania.economizae.transaction.application.dto.ConsultaTransacoesResult;
+import br.saasmania.economizae.transaction.application.input.ConsultarTransacoesPorPeriodoInput;
+import br.saasmania.economizae.transaction.application.input.PersistTransactionInput;
+import br.saasmania.economizae.transaction.application.output.ConsultaTransacoesOutput;
+import br.saasmania.economizae.transaction.application.output.TransactionOutput;
 
 @Component
 public class ExecutorDeComandoFinanceiroAdapter implements IExecutorDeComandoFinanceiroPort {
@@ -40,43 +42,42 @@ public class ExecutorDeComandoFinanceiroAdapter implements IExecutorDeComandoFin
         };
     }
 
-private TipoMovimento extrairTipo(String tipoBruto) {
-    if (tipoBruto == null || tipoBruto.isBlank()) {
-        return TipoMovimento.DESPESA; // default explícito, não acidental
+    private TipoMovimento extrairTipo(String tipoBruto) {
+        if (tipoBruto == null || tipoBruto.isBlank()) {
+            return TipoMovimento.DESPESA; // default explícito, não acidental
+        }
+        try {
+            return TipoMovimento.valueOf(tipoBruto.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return TipoMovimento.DESPESA;
+        }
     }
-    try {
-        return TipoMovimento.valueOf(tipoBruto.toUpperCase(Locale.ROOT));
-    } catch (IllegalArgumentException ex) {
-        return TipoMovimento.DESPESA;
-    }
-}
 
-private RespostaFinal criar(Map<String, String> parametros) {
-    BigDecimal valor = extrairValor(parametros.get("valor"));
-    CategoriaTransacao categoria = extrairCategoria(parametros.get("categoria"));
-    String estabelecimento = parametros.getOrDefault("estabelecimento", "não informado");
-    LocalDate data = extrairData(parametros.get("periodo"));
-    TipoMovimento tipo = extrairTipo(parametros.get("tipo"));
+    private RespostaFinal criar(Map<String, String> parametros) {
+        PersistTransactionInput input = new PersistTransactionInput(
+                extrairValor(parametros.get("valor")),
+                extrairCategoria(parametros.get("categoria")),
+                parametros.getOrDefault("estabelecimento", "não informado"),
+                extrairData(parametros.get("periodo")),
+                extrairTipo(parametros.get("tipo")));
 
-    Transacao transacao = criarTransacao.executar(
-            valor, categoria, estabelecimento, data, tipo);
+        TransactionOutput resultado = criarTransacao.executar(input);
 
         return new RespostaFinal(
                 "Transação registrada: R$ %.2f em %s (%s) no dia %s".formatted(
-                        transacao.getValor(),
-                        transacao.getEstabelecimento(),
-                        transacao.getCategoria(),
-                        transacao.getData()));
+                        resultado.valor(), resultado.estabelecimento(),
+                        resultado.categoria(), resultado.data()));
     }
 
-private RespostaFinal consultar(Map<String, String> parametros) {
-    LocalDate data = extrairData(parametros.get("periodo"));
-    ConsultaTransacoesResult resultado = consultarTransacoes.executar(data, data);
+    private RespostaFinal consultar(Map<String, String> parametros) {
+        LocalDate data = extrairData(parametros.get("periodo"));
+        ConsultaTransacoesOutput resultado = consultarTransacoes.executar(
+                new ConsultarTransacoesPorPeriodoInput(data, data));
 
-    return new RespostaFinal(
-            "Você tem %d transação(ões) em %s, totalizando R$ %.2f".formatted(
-                    resultado.transacoes().size(), data, resultado.total()));
-}
+        return new RespostaFinal(
+                "Você tem %d transação(ões) em %s, totalizando R$ %.2f".formatted(
+                        resultado.transacoes().size(), data, resultado.total()));
+    }
 
     private BigDecimal extrairValor(String valorBruto) {
         if (valorBruto == null || valorBruto.isBlank()) {
@@ -97,7 +98,8 @@ private RespostaFinal consultar(Map<String, String> parametros) {
     }
 
     private LocalDate extrairData(String periodo) {
-        if (periodo == null) return LocalDate.now();
+        if (periodo == null)
+            return LocalDate.now();
         return switch (periodo.toLowerCase(Locale.ROOT)) {
             case "hoje" -> LocalDate.now();
             case "ontem" -> LocalDate.now().minusDays(1);

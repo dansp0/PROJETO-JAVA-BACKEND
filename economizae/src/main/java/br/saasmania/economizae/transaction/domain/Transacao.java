@@ -13,9 +13,13 @@ public class Transacao {
 
      private Transacao(TransacaoId id, BigDecimal valor, CategoriaTransacao categoria,
                        String estabelecimento, LocalDate data, TipoMovimento tipo) {
+
+
         if (valor == null || valor.signum() <= 0) {
             throw new IllegalArgumentException("Valor da transação deve ser positivo");
         }
+        
+
         this.id = id;
         this.valor = valor;
         this.categoria = categoria;
@@ -28,6 +32,11 @@ public class Transacao {
                                        String estabelecimento, LocalDate data, TipoMovimento tipo) {
         return new Transacao(TransacaoId.novo(), valor, categoria, estabelecimento, data, tipo);
     }
+
+    public static Transacao reconstruir(TransacaoId id, BigDecimal valor, CategoriaTransacao categoria,
+                                     String estabelecimento, LocalDate data, TipoMovimento tipo) {
+    return new Transacao(id, valor, categoria, estabelecimento, data, tipo);
+}
 
     public TransacaoId getId() { return id; }
     public BigDecimal getValor() { return valor; }

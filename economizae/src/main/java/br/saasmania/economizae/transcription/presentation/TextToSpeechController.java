@@ -24,7 +24,7 @@ public class TextToSpeechController {
     // Define que a saída será um arquivo de áudio MPEG (MP3)
     @PostMapping(value = "/sintetizar", produces = "audio/mpeg")
     public ResponseEntity<byte[]> sintetizarVoz(@RequestBody String textoDaIa) {
-        
+        System.out.println("Texto recebido:>>>>>>>>>>" + textoDaIa);
         // Chama a camada de serviço para bater na OpenAI e gerar o áudio
         byte[] audioGerado = ttsService.converterTextoParaAudio(textoDaIa);
         
