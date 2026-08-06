@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 import br.saasmania.economizae.transaction.domain.CategoriaTransacao;
 import br.saasmania.economizae.transaction.domain.ITransacaoRepository;
 import br.saasmania.economizae.transaction.domain.Transacao;
 
-@Component
+@Profile("test")
 public class InMemoryTransacaoRepository implements ITransacaoRepository {
     private final List<Transacao> transacoes = new CopyOnWriteArrayList<>();
 
